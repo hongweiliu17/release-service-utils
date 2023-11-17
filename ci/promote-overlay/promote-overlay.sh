@@ -69,7 +69,7 @@ if [ -z "${GITHUB_TOKEN}" ]; then
   exit 1
 fi
 
-UPDATE_BRANCH_NAME="release-service-${TARGET_OVERLAY}-update-"$(date '+%Y_%m_%d__%H_%M_%S')
+UPDATE_BRANCH_NAME="integration-service-${TARGET_OVERLAY}-update-"$(date '+%Y_%m_%d__%H_%M_%S')
 
 # GitHub repository details
 owner="redhat-appstudio"
@@ -80,7 +80,7 @@ token="${GITHUB_TOKEN}"
 
 # New branch and commit details
 new_branch=${UPDATE_BRANCH_NAME}
-commit_message="Promote release-service from ${SOURCE_OVERLAY} to ${TARGET_OVERLAY}"
+commit_message="Promote integration-service from ${SOURCE_OVERLAY} to ${TARGET_OVERLAY}"
 
 # Fork repository and branch parameters
 fork_repo="infra-deployments"  # Change this to your fork's repository
@@ -92,7 +92,7 @@ description="Included PRs:\r\n"
 # Clone the repository
 tmpDir=$(mktemp -d)
 infraDeploymentDir=${tmpDir}/infra-deployments
-releaseServiceDir=${tmpDir}/release-service
+releaseServiceDir=${tmpDir}/integration-service
 mkdir -p ${infraDeploymentDir}
 mkdir -p ${releaseServiceDir}
 
@@ -102,7 +102,7 @@ else
   echo "Temporary git clone directory: ${tmpDir}"
 fi
 
-echo -e "---\nPromoting release-service ${SOURCE_OVERLAY} to ${TARGET_OVERLAY} in ${owner}/${repo}\n---\n"
+echo -e "---\nPromoting integration-service ${SOURCE_OVERLAY} to ${TARGET_OVERLAY} in ${owner}/${repo}\n---\n"
 cd ${tmpDir}
 
 echo -e "Sync fork with upstream:"
@@ -117,7 +117,7 @@ sync_fork_json=$(curl -s -L \
 echo $sync_fork_json
 
 git clone "git@github.com:$FORK_OWNER/$repo.git"
-git clone "git@github.com:$owner/release-service.git"
+git clone "git@github.com:$owner/integration-service.git"
 cd ${infraDeploymentDir}
 
 git fetch --all --tags --prune
@@ -126,12 +126,12 @@ git fetch --all --tags --prune
 git reset --hard HEAD
 git checkout -b "$new_branch" origin/"$base_branch"
 
-RS_SOURCE_OVERLAY_COMMIT=$(yq '.images[0].newTag' < components/release/${SOURCE_OVERLAY}/kustomization.yaml)
-RS_TARGET_OVERLAY_COMMIT=$(yq '.images[0].newTag' < components/release/${TARGET_OVERLAY}/kustomization.yaml)
+RS_SOURCE_OVERLAY_COMMIT=$(yq '.images[0].newTag' < components/integration/${SOURCE_OVERLAY}/kustomization.yaml)
+RS_TARGET_OVERLAY_COMMIT=$(yq '.images[0].newTag' < components/integration/${TARGET_OVERLAY}/kustomization.yaml)
 
 echo ""
-echo 'release-service source overlay commit -> '"$RS_SOURCE_OVERLAY_COMMIT"
-echo 'release-service target overlay commit -> '"$RS_TARGET_OVERLAY_COMMIT"
+echo 'integration-service source overlay commit -> '"$RS_SOURCE_OVERLAY_COMMIT"
+echo 'integration-service target overlay commit -> '"$RS_TARGET_OVERLAY_COMMIT"
 echo ""
 
 cd  ${releaseServiceDir}
@@ -146,9 +146,9 @@ do
 done
 
 cd ${infraDeploymentDir}
-sed -i "s/$RS_TARGET_OVERLAY_COMMIT/$RS_SOURCE_OVERLAY_COMMIT/g" components/release/${TARGET_OVERLAY}/kustomization.yaml
+sed -i "s/$RS_TARGET_OVERLAY_COMMIT/$RS_SOURCE_OVERLAY_COMMIT/g" components/integration/${TARGET_OVERLAY}/kustomization.yaml
 
-git add components/release/${TARGET_OVERLAY}/kustomization.yaml
+git add components/integration/${TARGET_OVERLAY}/kustomization.yaml
 git commit -m "$commit_message"
 
 git push origin "$new_branch"
